@@ -12,38 +12,36 @@
         <div class="login_top">
           <div class="left fl">会员登录</div>
           <div class="right fr">
-            您还不是我们的会员？<a href="register.html" target="_self"
-              >立即注册</a
-            >
+            您还不是我们的会员？<a href="" target="_self">立即注册</a>
           </div>
           <div class="clear"></div>
           <div class="under-line center"></div>
         </div>
-        <form id="loginForm" @submit.prevent="submitForm">
+        <form @submit.prevent="submitForm">
           <div class="login_main center">
             <div class="login-info">
               手机号:&nbsp;<input
                 class="login-info-input"
+                v-model="form.loginName"
                 type="text"
                 name="loginName"
                 id="loginName"
                 placeholder="请输入你的手机号"
-                v-model="formData.phone"
               />
             </div>
             <div class="login-info">
               密&nbsp;&nbsp;&nbsp;&nbsp;码:&nbsp;<input
                 class="login-info-input"
-                id="password"
+                v-model="form.passwordMd5"
+                id="passwordMd5"
                 type="password"
-                name="password"
+                name="passwordMd5"
                 placeholder="请输入你的密码"
-                v-model="formData.password"
               />
             </div>
           </div>
           <div class="login_submit">
-            <input class="submit" type="submit" value="立即登录" />
+            <button class="submit" type="submit">立即登录</button>
           </div>
         </form>
       </div>
@@ -51,47 +49,49 @@
   </div>
 </template>
 
-<script>
-import { onMounted } from "vue";
-import md5 from "js-md5";
+<script setup>
+import { onMounted, onBeforeUnmount } from "vue";
 import { login } from "@/service/user";
+import md5 from "js-md5";
+import { setLocal } from "@/common/js/utils";
+import { ElMessage } from "element-plus";
+import { useRouter } from "vue-router";
 
-export default {
-  setup() {
-    onMounted(() => {
-      document.body.style.backgroundColor = "#14212a";
+onMounted(() => {
+  document.body.style.backgroundColor = "#14212a";
+});
+
+onBeforeUnmount(() => {
+  document.body.style.backgroundColor = "";
+});
+
+const router = useRouter();
+
+const form = {
+  loginName: "",
+  passwordMd5: "",
+};
+
+const submitForm = () => {
+  // 对密码进行MD5加密
+  const encryptedPwd = md5(form.passwordMd5);
+  // 调用login方法
+  login({ loginName: form.loginName, passwordMd5: encryptedPwd })
+    .then((res) => {
+      // 登录成功后，将用户信息存储到本地存储中
+      console.log(res);
+      // setLocal("token", JSON.stringify(res.data));
+      setLocal("token", res.data);
+      ElMessage("登录成功");
+      // 跳转到首页
+      console.log(res.data);
+      // router.push("/");
+      // 需要刷新页面，否则 axios.js 文件里的 token 不会被重置
+      window.location.href = "/";
+    })
+    .catch((err) => {
+      console.log(err);
     });
-
-    const formData = {
-      phone: "",
-      password: "",
-    };
-
-    // 登录函数
-    const handleLogin = () => {
-      // 获取表单数据
-      const loginName = document.getElementById("loginName").value;
-      const password = document.getElementById("password").value;
-
-      // 对密码进行加密
-      const passwordMd5 = md5(password);
-
-      // 调用后端登录接口
-      login(loginName, passwordMd5)
-        .then((res) => {
-          // 登录成功，跳转到首页
-          window.location.href = "/index.html";
-        })
-        .catch((error) => {
-          console.log(error);
-        });
-    };
-
-    return {
-      handleLogin,
-      formData,
-    };
-  },
 };
 </script>
 

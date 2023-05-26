@@ -10,105 +10,54 @@
       </ul>
       <div class="fr">
         <ul class="login">
-          <li>
-            <a href="">登录</a>
+          <li v-if="!token">
+            <router-link to="/login">登录</router-link>
           </li>
-          <li>
-            <a href="">注册</a>
+          <li v-if="!token">
+            <router-link to="/register">注册</router-link>
+          </li>
+          <li v-if="token">
+            <a @click="logout">退出登录</a>
           </li>
         </ul>
-        <div class="shopcart">
+        <div class="shopcart" @click.prevent="goToCart">
           <a style="color: white" href="">
             <i class="iconfont icon-cart"></i>
-            购物车(0)</a
-          >
+            购物车({{ cartItemCount }})
+          </a>
         </div>
       </div>
     </div>
   </header>
 </template>
 
-<script>
-export default {
-  props: {
-    msg: String,
-  },
+<script setup>
+import { ref, computed } from "vue";
+import { useRouter } from "vue-router";
+import { useStore } from "vuex";
+import { ElMessage } from "element-plus";
+
+const token = ref(localStorage.getItem("token"));
+const store = useStore();
+const router = useRouter();
+
+const goToCart = () => {
+  router.push("/shop-cart");
+};
+
+// 使用计算属性获取购物车数量
+const cartItemCount = computed(() => {
+  return store.state.list.length;
+});
+
+const logout = () => {
+  localStorage.removeItem("token"); // 清除 token
+  // 清除其他需要清除的内容
+  ElMessage({ message: "退出成功" });
+  // 跳转到登录页面
+  router.push("/login");
 };
 </script>
 
-<!-- Add "scoped" attribute to limit CSS to this component only -->
-<style scoped>
-@import "@/assets/common.css";
-#header {
-  display: flex;
-  justify-content: center;
-  width: 100%;
-  height: 40px;
-  background-color: #333;
-}
-
-#header .center {
-  width: 1226px;
-  height: 40px;
-  flex-shrink: 0;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  /*background-color: pink;*/
-}
-
-#header .center .fl {
-  flex-shrink: 0;
-  display: flex;
-  width: 680px;
-}
-#header .center ul li a {
-  display: flex;
-  align-items: center;
-  height: 12px;
-  font-size: 14px;
-  color: #b0b0b0;
-  padding: 0 8px;
-  border-right: 1px solid #b0b0b0;
-}
-#header .center ul li:last-of-type a {
-  border-right: none;
-}
-
-#header .center .fr {
-  display: flex;
-  height: 40px;
-}
-
-#header .center .fr .login {
-  display: flex;
-  align-items: center;
-  width: 98px;
-  height: 40px;
-}
-
-#header .center .fr .login li a {
-  display: flex;
-  align-items: center;
-  height: 12px;
-  font-size: 12px;
-  color: #b0b0b0;
-  padding: 0 8px;
-  border-right: 1px solid #b0b0b0;
-}
-
-#header .center .fr .login li:last-of-type a {
-  border-right: none;
-}
-
-#header .center .fr .shopcart {
-  display: flex;
-  width: 120px;
-  font-size: 12px;
-  color: #fff;
-  margin: 0 20px;
-  justify-content: center;
-  align-items: center;
-  background-color: #1baeae;
-}
-</style>
+<!-- 使用 "scoped" 属性将 CSS 样式限制在本组件内 -->
+<style scoped></style>
